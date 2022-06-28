@@ -1,8 +1,8 @@
 diff --git a/test/core/binary.wast b/test/core/binary.wast
-index ebebd2ea..94873528 100644
+index 891aad3..07356a3 100644
 --- a/test/core/binary.wast
 +++ b/test/core/binary.wast
-@@ -161,7 +161,7 @@
+@@ -206,7 +206,7 @@
  )
  
  ;; Type section with signed LEB128 encoded type
@@ -11,7 +11,7 @@ index ebebd2ea..94873528 100644
    (module binary
      "\00asm" "\01\00\00\00"
      "\01"                     ;; Type section id
-@@ -171,7 +171,7 @@
+@@ -216,7 +216,7 @@
      "\00\00"
    )
    "integer representation too long"
@@ -20,7 +20,7 @@ index ebebd2ea..94873528 100644
  
  ;; Unsigned LEB128 must not be overlong
  (assert_malformed
-@@ -1582,7 +1582,7 @@
+@@ -1683,7 +1683,7 @@
  )
  
  ;; 2 elem segment declared, 1 given
@@ -29,7 +29,7 @@ index ebebd2ea..94873528 100644
    (module binary
      "\00asm" "\01\00\00\00"
      "\01\04\01"                             ;; type section
-@@ -1595,7 +1595,7 @@
+@@ -1696,7 +1696,7 @@
      ;; "\00\41\00\0b\01\00"                 ;; elem 1 (missed)
    )
    "unexpected end"
@@ -38,8 +38,26 @@ index ebebd2ea..94873528 100644
  
  ;; 2 elem segment declared, 1.5 given
  (assert_malformed
+@@ -1813,7 +1813,7 @@
+ )
+ 
+ ;; 1 br_table target declared, 2 given
+-(assert_malformed
++(;assert_malformed
+   (module binary
+     "\00asm" "\01\00\00\00"
+     "\01\04\01"                             ;; type section
+@@ -1832,7 +1832,7 @@
+     "\0b\0b\0b"                             ;; end
+   )
+   "unexpected end"
+-)
++;)
+ 
+ ;; Start section
+ (module binary
 diff --git a/test/core/data.wast b/test/core/data.wast
-index 4f339bed..0b5b3e6b 100644
+index 4f339be..0b5b3e6 100644
 --- a/test/core/data.wast
 +++ b/test/core/data.wast
 @@ -306,9 +306,10 @@
@@ -93,26 +111,10 @@ index 4f339bed..0b5b3e6b 100644
  
  ;; Invalid offsets
 diff --git a/test/core/elem.wast b/test/core/elem.wast
-index 575ecef8..204b7486 100644
+index 575ecef..6eecab9 100644
 --- a/test/core/elem.wast
 +++ b/test/core/elem.wast
-@@ -467,6 +467,7 @@
-   "type mismatch"
- )
- 
-+(; not supported by wat2wasm
- (assert_invalid
-   (module
-     (table 1 funcref)
-@@ -507,6 +508,7 @@
-   )
-   "constant expression required"
- )
-+;)
- 
- ;; Two elements target the same slot
- 
-@@ -571,9 +573,11 @@
+@@ -571,9 +571,11 @@
    (func $const-i32-d (type $out-i32) (i32.const 68))
  )
  
@@ -124,7 +126,7 @@ index 575ecef8..204b7486 100644
  
  (module $module3
    (type $out-i32 (func (result i32)))
-@@ -584,6 +588,8 @@
+@@ -584,6 +586,8 @@
    (func $const-i32-f (type $out-i32) (i32.const 70))
  )
  
@@ -134,7 +136,7 @@ index 575ecef8..204b7486 100644
  (assert_return (invoke $module1 "call-9") (i32.const 70))
 +;)
 diff --git a/test/core/global.wast b/test/core/global.wast
-index 9fa5e223..8c4b949d 100644
+index 9fa5e22..8c4b949 100644
 --- a/test/core/global.wast
 +++ b/test/core/global.wast
 @@ -328,10 +328,12 @@
@@ -151,7 +153,7 @@ index 9fa5e223..8c4b949d 100644
  (assert_invalid
    (module (global (import "test" "global-i32") i32) (global i32 (global.get 0) (global.get 0)))
 diff --git a/test/core/imports.wast b/test/core/imports.wast
-index 35e8c917..a7a459df 100644
+index 35e8c91..a7a459d 100644
 --- a/test/core/imports.wast
 +++ b/test/core/imports.wast
 @@ -577,6 +577,7 @@
@@ -171,7 +173,7 @@ index 35e8c917..a7a459df 100644
  
  ;; Syntax errors
 diff --git a/test/core/linking.wast b/test/core/linking.wast
-index 994e0f49..d0bfb5f6 100644
+index 994e0f4..d0bfb5f 100644
 --- a/test/core/linking.wast
 +++ b/test/core/linking.wast
 @@ -64,6 +64,7 @@
@@ -328,7 +330,7 @@ index 994e0f49..d0bfb5f6 100644
  (assert_return (invoke $Ms "get table[0]") (i32.const 0xdead))
 +;)
 diff --git a/test/core/ref_func.wast b/test/core/ref_func.wast
-index adb5cb78..590f6262 100644
+index adb5cb7..590f626 100644
 --- a/test/core/ref_func.wast
 +++ b/test/core/ref_func.wast
 @@ -4,7 +4,8 @@
@@ -342,7 +344,7 @@ index adb5cb78..590f6262 100644
      (i32.add (local.get $x) (i32.const 1))
    )
 diff --git a/test/core/select.wast b/test/core/select.wast
-index 046e6fe2..b6770238 100644
+index 046e6fe..b677023 100644
 --- a/test/core/select.wast
 +++ b/test/core/select.wast
 @@ -324,6 +324,7 @@
@@ -362,7 +364,7 @@ index 046e6fe2..b6770238 100644
  
  (assert_invalid
 diff --git a/test/core/table_copy.wast b/test/core/table_copy.wast
-index 380e84ee..f37e745c 100644
+index 380e84e..f37e745 100644
 --- a/test/core/table_copy.wast
 +++ b/test/core/table_copy.wast
 @@ -14,11 +14,12 @@
@@ -673,7 +675,7 @@ index 380e84ee..f37e745c 100644
    (table $t1 30 30 funcref)
    (elem (table $t1) (i32.const 2) func 3 1 4 1)
 diff --git a/test/core/table_init.wast b/test/core/table_init.wast
-index 0b2d26f7..bdab6a01 100644
+index 0b2d26f..bdab6a0 100644
 --- a/test/core/table_init.wast
 +++ b/test/core/table_init.wast
 @@ -14,11 +14,12 @@
