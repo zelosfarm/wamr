@@ -76,6 +76,7 @@ wasm_exec_env_create_internal(struct WASMModuleInstanceCommon *module_inst,
 #if WASM_ENABLE_MEMORY_TRACING != 0
     wasm_runtime_dump_exec_env_mem_consumption(exec_env);
 #endif
+
     return exec_env;
 
 #if WASM_ENABLE_THREAD_MGR != 0
@@ -195,6 +196,13 @@ WASMModuleInstanceCommon *
 wasm_exec_env_get_module_inst(WASMExecEnv *exec_env)
 {
     return exec_env->module_inst;
+}
+
+void
+wasm_exec_env_set_module_inst(WASMExecEnv *exec_env,
+                              WASMModuleInstanceCommon *const module_inst)
+{
+    exec_env->module_inst = module_inst;
 }
 
 void

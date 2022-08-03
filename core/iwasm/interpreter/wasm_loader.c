@@ -18,6 +18,10 @@
 #if WASM_ENABLE_DEBUG_INTERP != 0
 #include "../libraries/debug-engine/debug_engine.h"
 #endif
+#if WASM_ENABLE_FAST_JIT != 0
+#include "../fast-jit/jit_compiler.h"
+#include "../fast-jit/jit_codecache.h"
+#endif
 
 #ifndef TRACE_WASM_LOADER
 #define TRACE_WASM_LOADER 0
@@ -3502,6 +3506,28 @@ fail:
 }
 #endif /* (WASM_ENABLE_GC != 0) || (WASM_ENABLE_REF_TYPES != 0) */
 
+#if WASM_ENABLE_FAST_JIT != 0
+static void
+calculate_global_data_offset(WASMModule *module)
+{
+    uint32 i, data_offset;
+
+    data_offset = 0;
+    for (i = 0; i < module->import_global_count; i++) {
+        WASMGlobalImport *import_global =
+            &((module->import_globals + i)->u.global);
+        import_global->data_offset = data_offset;
+        data_offset += wasm_value_type_size(import_global->type);
+    }
+
+    for (i = 0; i < module->global_count; i++) {
+        WASMGlobal *global = module->globals + i;
+        global->data_offset = data_offset;
+        data_offset += wasm_value_type_size(global->type);
+    }
+}
+#endif
+
 static bool
 load_func_index_vec(const uint8 **p_buf, const uint8 *buf_end,
                     WASMModule *module, WASMTableSeg *table_segment,
@@ -4468,6 +4494,21 @@ load_from_sections(WASMModule *module, WASMSection *sections,
 #endif
     }
 
+#if WASM_ENABLE_FAST_JIT != 0
+    calculate_global_data_offset(module);
+
+    if (module->function_count
+        && !(module->fast_jit_func_ptrs =
+                 loader_malloc(sizeof(void *) * module->function_count,
+                               error_buf, error_buf_size))) {
+        return false;
+    }
+    if (!jit_compiler_compile_all(module)) {
+        set_error_buf(error_buf, error_buf_size, "fast jit compilation failed");
+        return false;
+    }
+#endif
+
 #if WASM_ENABLE_MEMORY_TRACING != 0
     wasm_runtime_dump_module_mem_consumption((WASMModuleCommon *)module);
 #endif
@@ -4870,7 +4911,7 @@ wasm_loader_load(uint8 *buf, uint32 size,
         return NULL;
     }
 
-#if WASM_ENABLE_DEBUG_INTERP != 0
+#if WASM_ENABLE_DEBUG_INTERP != 0 || WASM_ENABLE_FAST_JIT != 0
     module->load_addr = (uint8 *)buf;
     module->load_size = size;
 #endif
@@ -5033,6 +5074,16 @@ wasm_loader_unload(WASMModule *module)
 
 #if WASM_ENABLE_LOAD_CUSTOM_SECTION != 0
     wasm_runtime_destroy_custom_sections(module->custom_section_list);
+#endif
+
+#if WASM_ENABLE_FAST_JIT != 0
+    if (module->fast_jit_func_ptrs) {
+        for (i = 0; i < module->function_count; i++) {
+            if (module->fast_jit_func_ptrs[i])
+                jit_code_cache_free(module->fast_jit_func_ptrs[i]);
+        }
+        wasm_runtime_free(module->fast_jit_func_ptrs);
+    }
 #endif
 
     wasm_runtime_free(module);
@@ -10138,7 +10189,7 @@ re_scan:
                 PUSH_OFFSET_TYPE(local_type);
 #else
 #if (WASM_ENABLE_WAMR_COMPILER == 0) && (WASM_ENABLE_JIT == 0) \
-    && (WASM_ENABLE_DEBUG_INTERP == 0)
+    && (WASM_ENABLE_FAST_JIT == 0) && (WASM_ENABLE_DEBUG_INTERP == 0)
                 if (local_offset < 0x80
 #if WASM_ENABLE_GC != 0
                     && !wasm_is_type_reftype(local_type)
@@ -10210,7 +10261,7 @@ re_scan:
                 }
 #else
 #if (WASM_ENABLE_WAMR_COMPILER == 0) && (WASM_ENABLE_JIT == 0) \
-    && (WASM_ENABLE_DEBUG_INTERP == 0)
+    && (WASM_ENABLE_FAST_JIT == 0) && (WASM_ENABLE_DEBUG_INTERP == 0)
 
                 if (local_offset < 0x80
 #if WASM_ENABLE_GC != 0
@@ -10279,7 +10330,7 @@ re_scan:
                                - wasm_value_type_cell_num(local_type)));
 #else
 #if (WASM_ENABLE_WAMR_COMPILER == 0) && (WASM_ENABLE_JIT == 0) \
-    && (WASM_ENABLE_DEBUG_INTERP == 0)
+    && (WASM_ENABLE_FAST_JIT == 0) && (WASM_ENABLE_DEBUG_INTERP == 0)
                 if (local_offset < 0x80
 #if WASM_ENABLE_GC != 0
                     && !wasm_is_type_reftype(local_type)

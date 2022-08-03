@@ -50,7 +50,11 @@ if (NOT DEFINED WAMR_BUILD_TARGET)
 endif ()
 
 ################ optional according to settings ################
-if (WAMR_BUILD_INTERP EQUAL 1 OR WAMR_BUILD_JIT EQUAL 1)
+if (WAMR_BUILD_INTERP EQUAL 1 OR WAMR_BUILD_JIT EQUAL 1
+    OR WAMR_BUILD_FAST_JIT EQUAL 1)
+    if (WAMR_BUILD_FAST_JIT EQUAL 1)
+        set (WAMR_BUILD_FAST_INTERP 0)
+    endif ()
     include (${IWASM_DIR}/interpreter/iwasm_interp.cmake)
 endif ()
 
@@ -59,6 +63,10 @@ if (WAMR_BUILD_AOT EQUAL 1)
     if (WAMR_BUILD_JIT EQUAL 1)
         include (${IWASM_DIR}/compilation/iwasm_compl.cmake)
     endif ()
+endif ()
+
+if (NOT WAMR_BUILD_JIT EQUAL 1 AND WAMR_BUILD_FAST_JIT EQUAL 1)
+    include (${IWASM_DIR}/fast-jit/iwasm_fast_jit.cmake)
 endif ()
 
 if (WAMR_BUILD_GC EQUAL 1)
@@ -134,7 +142,6 @@ include (${SHARED_DIR}/mem-alloc/mem_alloc.cmake)
 include (${IWASM_DIR}/common/iwasm_common.cmake)
 include (${SHARED_DIR}/utils/shared_utils.cmake)
 
-
 set (source_all
     ${PLATFORM_SHARED_SOURCE}
     ${MEM_ALLOC_SHARED_SOURCE}
@@ -144,6 +151,7 @@ set (source_all
     ${IWASM_COMMON_SOURCE}
     ${IWASM_INTERP_SOURCE}
     ${IWASM_AOT_SOURCE}
+    ${IWASM_FAST_JIT_SOURCE}
     ${IWASM_GC_SOURCE}
     ${IWASM_COMPL_SOURCE}
     ${WASM_APP_LIB_SOURCE_ALL}

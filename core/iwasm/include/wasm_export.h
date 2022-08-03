@@ -139,6 +139,9 @@ typedef struct RuntimeInitArgs {
     char ip_addr[128];
     int platform_port;
     int instance_port;
+
+    /* Fast JIT code cache size */
+    uint32_t fast_jit_code_cache_size;
 } RuntimeInitArgs;
 
 #ifndef WASM_VALKIND_T_DEFINED
@@ -300,6 +303,12 @@ wasm_runtime_find_module_registered(const char *module_name);
  * Load a WASM module from a specified byte buffer. The byte buffer can be
  * WASM binary data when interpreter or JIT is enabled, or AOT binary data
  * when AOT is enabled. If it is AOT binary data, it must be 4-byte aligned.
+ *
+ * Note: In case of AOT XIP modules, the runtime doesn't make modifications
+ * to the buffer. (Except the "Known issues" mentioned in doc/xip.md.)
+ * Otherwise, the runtime can make modifications to the buffer for its
+ * internal purposes. Thus, in general, it isn't safe to create multiple
+ * modules from a single buffer.
  *
  * @param buf the byte buffer which contains the WASM/AOT binary data,
  *        note that the byte buffer must be writable since runtime may
@@ -532,6 +541,21 @@ wasm_runtime_thread_env_inited(void);
  */
 WASM_RUNTIME_API_EXTERN wasm_module_inst_t
 wasm_runtime_get_module_inst(wasm_exec_env_t exec_env);
+
+/**
+ * Set WASM module instance of execution environment
+ * Caution:
+ *   normally the module instance is bound with the execution
+ *   environment one by one, if multiple module instances want
+ *   to share to the same execution environment, developer should
+ *   be responsible for the backup and restore of module instance
+ *
+ * @param exec_env the execution environment
+ * @param module_inst the WASM module instance to set
+ */
+WASM_RUNTIME_API_EXTERN void
+wasm_runtime_set_module_inst(wasm_exec_env_t exec_env,
+                             const wasm_module_inst_t module_inst);
 
 /**
  * Call the given WASM function of a WASM module instance with
