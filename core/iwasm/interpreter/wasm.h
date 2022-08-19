@@ -341,6 +341,8 @@ typedef struct WASMFuncType {
     uint16 ref_type_map_count;
     WASMRefTypeMap *ref_type_maps;
     WASMRefTypeMap *result_ref_type_maps;
+#else
+    uint16 ref_count;
 #endif
 
     /* types of params and results, only store the first byte
@@ -934,6 +936,11 @@ wasm_type_equal(const WASMType *type1, const WASMType *type2,
 {
     const WASMFuncType *func_type1 = (const WASMFuncType *)type1;
     const WASMFuncType *func_type2 = (const WASMFuncType *)type2;
+
+    if (type1 == type2) {
+        return true;
+    }
+
     return (func_type1->param_count == func_type2->param_count
             && func_type1->result_count == func_type2->result_count
             && memcmp(

@@ -92,6 +92,18 @@ wasm_interp_call_wasm(struct WASMModuleInstance *module_inst,
                       struct WASMFunctionInstance *function, uint32 argc,
                       uint32 argv[]);
 
+/**
+ * @brief Restore the wasm stack frame to the last native frame or the begging
+ * of the whole stack
+ * @note e.g. for stack "begin --> interp --> interp", it will back to the
+ * "begin", for stack "begin --> interp --> native --> interp", it will become
+ * "begin --> interp --> native"
+ *
+ * @param exec_env the execution environment
+ */
+void
+wasm_interp_restore_wasm_frame(struct WASMExecEnv *exec_env);
+
 #if WASM_ENABLE_GC != 0
 bool
 wasm_interp_traverse_gc_rootset(struct WASMExecEnv *exec_env, void *heap);
