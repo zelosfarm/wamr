@@ -26,7 +26,7 @@ mem_allocator_create_with_struct_and_pool(void *struct_buf,
                                           void *pool_buf,
                                           uint32_t pool_buf_size);
 
-void
+int
 mem_allocator_destroy(mem_allocator_t allocator);
 
 uint32
@@ -68,6 +68,9 @@ mem_allocator_enable_gc_reclaim(mem_allocator_t allocator, void *cluster);
 int
 mem_allocator_add_root(mem_allocator_t allocator, WASMObjectRef obj);
 #endif /* end of WASM_ENABLE_GC != 0 */
+
+bool
+mem_allocator_get_alloc_info(mem_allocator_t allocator, void *mem_alloc_info);
 
 #ifdef __cplusplus
 }
