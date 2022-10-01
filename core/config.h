@@ -425,4 +425,9 @@
 #ifndef GC_RTTOBJ_MAP_SIZE_DEFAULT
 #define GC_RTTOBJ_MAP_SIZE_DEFAULT 64
 #endif
+
+#ifndef WASM_ENABLE_SGX_IPFS
+#define WASM_ENABLE_SGX_IPFS 0
+#endif
+
 #endif /* end of _CONFIG_H_ */
