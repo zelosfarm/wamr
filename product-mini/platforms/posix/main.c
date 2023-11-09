@@ -75,6 +75,9 @@ print_help()
     printf("  --dir=<dir>              Grant wasi access to the given host directories\n");
     printf("                           to the program, for example:\n");
     printf("                             --dir=<dir1> --dir=<dir2>\n");
+    printf("  --map-dir=<guest::host>  Grant wasi access to the given host directories\n");
+    printf("                           to the program at a specific guest path, for example:\n");
+    printf("                             --map-dir=<guest-path1::host-path1> --map-dir=<guest-path2::host-path2>\n");
     printf("  --addr-pool=<addrs>      Grant wasi access to the given network addresses in\n");
     printf("                           CIRD notation to the program, seperated with ',',\n");
     printf("                           for example:\n");
@@ -204,8 +207,11 @@ app_instance_repl(wasm_module_inst_t module_inst)
             break;
         }
         if (app_argc != 0) {
+            const char *exception;
             wasm_application_execute_func(module_inst, app_argv[0],
                                           app_argc - 1, app_argv + 1);
+            if ((exception = wasm_runtime_get_exception(module_inst)))
+                printf("%s\n", exception);
         }
         free(app_argv);
     }
@@ -435,7 +441,7 @@ module_reader_callback(package_type_t module_type, const char *module_name,
     const char *format = "%s/%s%s";
     int sz = strlen(module_search_path) + strlen("/") + strlen(module_name)
              + strlen(file_format) + 1;
-    char *wasm_file_name = BH_MALLOC(sz);
+    char *wasm_file_name = wasm_runtime_malloc(sz);
     if (!wasm_file_name) {
         return false;
     }
@@ -461,7 +467,37 @@ moudle_destroyer(uint8 *buffer, uint32 size)
 
 #if WASM_ENABLE_GLOBAL_HEAP_POOL != 0
 static char global_heap_buf[WASM_GLOBAL_HEAP_SIZE] = { 0 };
+#else
+static void *
+malloc_func(
+#if WASM_MEM_ALLOC_WITH_USER_DATA != 0
+    void *user_data,
 #endif
+    unsigned int size)
+{
+    return malloc(size);
+}
+
+static void *
+realloc_func(
+#if WASM_MEM_ALLOC_WITH_USER_DATA != 0
+    void *user_data,
+#endif
+    void *ptr, unsigned int size)
+{
+    return realloc(ptr, size);
+}
+
+static void
+free_func(
+#if WASM_MEM_ALLOC_WITH_USER_DATA != 0
+    void *user_data,
+#endif
+    void *ptr)
+{
+    free(ptr);
+}
+#endif /* end of WASM_ENABLE_GLOBAL_HEAP_POOL */
 
 #if WASM_ENABLE_STATIC_PGO != 0
 static void
@@ -573,6 +609,8 @@ main(int argc, char *argv[])
 #if WASM_ENABLE_LIBC_WASI != 0
     const char *dir_list[8] = { NULL };
     uint32 dir_list_size = 0;
+    const char *map_dir_list[8] = { NULL };
+    uint32 map_dir_list_size = 0;
     const char *env_list[8] = { NULL };
     uint32 env_list_size = 0;
     const char *addr_pool[8] = { NULL };
@@ -711,6 +749,16 @@ main(int argc, char *argv[])
             }
             dir_list[dir_list_size++] = argv[0] + 6;
         }
+        else if (!strncmp(argv[0], "--map-dir=", 10)) {
+            if (argv[0][10] == '\0')
+                return print_help();
+            if (map_dir_list_size >= sizeof(map_dir_list) / sizeof(char *)) {
+                printf("Only allow max map dir number %d\n",
+                       (int)(sizeof(map_dir_list) / sizeof(char *)));
+                return 1;
+            }
+            map_dir_list[map_dir_list_size++] = argv[0] + 10;
+        }
         else if (!strncmp(argv[0], "--env=", 6)) {
             char *tmp_env;
 
@@ -846,9 +894,13 @@ main(int argc, char *argv[])
     init_args.mem_alloc_option.pool.heap_size = sizeof(global_heap_buf);
 #else
     init_args.mem_alloc_type = Alloc_With_Allocator;
-    init_args.mem_alloc_option.allocator.malloc_func = malloc;
-    init_args.mem_alloc_option.allocator.realloc_func = realloc;
-    init_args.mem_alloc_option.allocator.free_func = free;
+#if WASM_MEM_ALLOC_WITH_USER_DATA != 0
+    /* Set user data for the allocator is needed */
+    /* init_args.mem_alloc_option.allocator.user_data = user_data; */
+#endif
+    init_args.mem_alloc_option.allocator.malloc_func = malloc_func;
+    init_args.mem_alloc_option.allocator.realloc_func = realloc_func;
+    init_args.mem_alloc_option.allocator.free_func = free_func;
 #endif
 
 #if WASM_ENABLE_FAST_JIT != 0
@@ -920,8 +972,9 @@ main(int argc, char *argv[])
     }
 
 #if WASM_ENABLE_LIBC_WASI != 0
-    wasm_runtime_set_wasi_args(wasm_module, dir_list, dir_list_size, NULL, 0,
-                               env_list, env_list_size, argv, argc);
+    wasm_runtime_set_wasi_args(wasm_module, dir_list, dir_list_size,
+                               map_dir_list, map_dir_list_size, env_list,
+                               env_list_size, argv, argc);
 
     wasm_runtime_set_wasi_addr_pool(wasm_module, addr_pool, addr_pool_size);
     wasm_runtime_set_wasi_ns_lookup_pool(wasm_module, ns_lookup_pool,
