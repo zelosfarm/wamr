@@ -45,10 +45,10 @@ cycle:
     loop cycle
 
 cycle_end:
-    mov 32(%rax), %rcx
-    mov 40(%rax), %rdx
-    mov 48(%rax), %r8
-    mov 56(%rax), %r9
+    mov 0x40(%rax), %rcx
+    mov 0x48(%rax), %rdx
+    mov 0x50(%rax), %r8
+    mov 0x58(%rax), %r9
 
     sub $32, %rsp # shadow space
 

@@ -1,0 +1,31 @@
+.{
+    .name = "wamr",
+    .version = "1.2.3",
+    .paths = .{
+        "core",
+        "product-mini",
+        "wamr-compiler",
+    },
+    .dependencies = .{
+        .zycore = .{
+            .url = "git+https://github.com/zelosfarm/zycore.git#77774d9de6cc6ebe03f50d7e231e4559ff0d3777",
+            .hash = "1220b3942b4b536eb06e7a761f095b2dbc654621b3c6e5d47e41e5b8938ab75e0e37",
+        },
+        .zydis = .{
+            .url = "git+https://github.com/zelosfarm/zydis.git#f300b962e750db0af7859d5015f58ea19620d9e5",
+            .hash = "122057d9483cc30a354b31b27c31b00ee7a1eb3e8518cfcb86253471e94a3bebb2a4",
+        },
+        .winpthreads = .{
+            .url = "git+https://github.com/zelosfarm/winpthreads.git#3d116b7469422909280ea7d2056b1ceda11bf83b",
+            .hash = "12205f23af713895a9a38891cb9e6dd7a0c8ab0d16790657f30378d003af7ff986f9",
+        },
+        .uv = .{
+            .url = "git+https://github.com/zelosfarm/libuv.git#95cfee1529323a1930cd4923aee906e58c2e0740",
+            .hash = "1220843e3670bf12b17119c54fd574eca8c3cce3223f2fb57f2ddc39786ef0673c2c",
+        },
+        .uvwasi = .{
+            .url = "git+https://github.com/zelosfarm/uvwasi.git#b521e0930faa195f3202cce893f79c84a0a7a460",
+            .hash = "122044118242ce333d12e30648bfff0b0160b8f9b8997ba1da640d90d50dc2c5d24c",
+        },
+    },
+}

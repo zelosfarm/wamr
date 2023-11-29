@@ -2284,7 +2284,7 @@ call_wasm_with_hw_bound_check(WASMModuleInstance *module_inst,
     uint32 guard_page_count = STACK_OVERFLOW_CHECK_GUARD_PAGE_COUNT;
     WASMRuntimeFrame *prev_frame = wasm_exec_env_get_cur_frame(exec_env);
     uint8 *prev_top = exec_env->wasm_stack.s.top;
-#ifdef BH_PLATFORM_WINDOWS
+#if defined(BH_PLATFORM_WINDOWS) && defined(_MSC_VER)
     int result;
     bool has_exception;
     char exception[EXCEPTION_BUF_LEN];
@@ -2315,7 +2315,7 @@ call_wasm_with_hw_bound_check(WASMModuleInstance *module_inst,
 
     wasm_runtime_set_exec_env_tls(exec_env);
     if (os_setjmp(jmpbuf_node.jmpbuf) == 0) {
-#ifndef BH_PLATFORM_WINDOWS
+#if !defined(BH_PLATFORM_WINDOWS) || !defined(_MSC_VER)
         wasm_interp_call_wasm(module_inst, exec_env, function, argc, argv);
 #else
         __try {

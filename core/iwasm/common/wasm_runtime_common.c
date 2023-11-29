@@ -255,16 +255,14 @@ decode_insn(uint8 *insn)
     char buffer[256];
 
     if (ZYAN_SUCCESS(ZydisDecoderDecodeFull(
-            &decoder, data + offset, length - offset, &instruction, operands,
-            ZYDIS_MAX_OPERAND_COUNT_VISIBLE,
-            ZYDIS_DFLAG_VISIBLE_OPERANDS_ONLY))) {
+            &decoder, data + offset, length - offset, &instruction, operands))) {
 
         /* Format & print the binary instruction structure to
            human readable format */
         ZydisFormatterFormatInstruction(&formatter, &instruction, operands,
                                         instruction.operand_count_visible,
                                         buffer, sizeof(buffer),
-                                        runtime_address);
+                                        runtime_address, ZYAN_NULL);
 
         /* Print current instruction */
         /*
@@ -4364,7 +4362,7 @@ fail:
 #undef v128
 #endif
 
-#if defined(_WIN32) || defined(_WIN32_)
+#if (defined(_WIN32) || defined(_WIN32_)) && defined(_MSC_VER)
 typedef union __declspec(intrin_type) __declspec(align(8)) v128 {
     __int8 m128i_i8[16];
     __int16 m128i_i16[8];
@@ -4414,7 +4412,7 @@ typedef v128 (*V128FuncPtr)(GenericFunctionPointer, uint64 *, uint64);
 static V128FuncPtr invokeNative_V128 = (V128FuncPtr)(uintptr_t)invokeNative;
 #endif
 
-#if defined(_WIN32) || defined(_WIN32_)
+#if (defined(_WIN32) || defined(_WIN32_)) && defined(_MSC_VER)
 #define MAX_REG_FLOATS 4
 #define MAX_REG_INTS 4
 #else /* else of defined(_WIN32) || defined(_WIN32_) */
