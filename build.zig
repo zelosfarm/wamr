@@ -31,10 +31,6 @@ pub fn build(b: *std.Build) !void {
     const disable_hw_bound_check = b.option(bool, "WAMR_DISABLE_HW_BOUND_CHECK", "Disable Hardware boundary check") orelse false;
     const disable_stack_hw_bound_check = b.option(bool, "WAMR_DISABLE_STACK_HW_BOUND_CHECK", "Hardware boundary check for native stack") orelse false;
 
-    if (target.isWindows() and build_libc_wasi and !build_libc_uvwasi) {
-        @panic("libc wasi is not supported on this target, try libc uvwasi instead");
-    }
-
     if (build_jit or build_fast_jit) {
         if (!build_interp) {
             @panic("Interpreter must be enabled for JIT");
@@ -72,6 +68,7 @@ pub fn build(b: *std.Build) !void {
             .target = target,
             .optimize = optimize,
         }).artifact("winpthreads"));
+        vmlib.linkSystemLibrary("ntdll");
     }
 
     if (build_aot) {
@@ -158,7 +155,6 @@ pub fn build(b: *std.Build) !void {
 
         if (optimize == .Debug) {
             // vmlib_flags.append("-DWASM_ENABLE_DEBUG_AOT=1") catch @panic("OOM");
-            // vmlib.addIncludePath(.{ .path = "C:/Development/zelosfarm/llvm-project-llvmorg-15.0.7/lldb/include" });
 
             // vmlib_sources.append("core/iwasm/aot/debug/elf_parser.c") catch @panic("OOM");
             // vmlib_sources.append("core/iwasm/aot/debug/jit_debug.c") catch @panic("OOM");
@@ -227,10 +223,6 @@ pub fn build(b: *std.Build) !void {
             .optimize = optimize,
         }).artifact("uvwasi"));
     } else if (build_libc_wasi) {
-        if (target.isWindows()) {
-            @panic("WAMR_BUILD_LIBC_WASI=true is not supported on windows, use WAMR_BUILD_LIBC_UVWASI instead");
-        }
-
         vmlib_flags.append("-DWASM_ENABLE_LIBC_WASI=1") catch @panic("OOM");
         vmlib_flags.append("-DWASM_ENABLE_MODULE_INST_CONTEXT=1") catch @panic("OOM");
 
@@ -291,11 +283,16 @@ pub fn build(b: *std.Build) !void {
 
             vmlib_sources.append("core/shared/platform/windows/platform_init.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/windows/win_atomic.cpp") catch @panic("OOM");
+            vmlib_sources.append("core/shared/platform/windows/win_clock.c") catch @panic("OOM");
+            if (build_libc_wasi) {
+                vmlib_sources.append("core/shared/platform/windows/win_file.c") catch @panic("OOM");
+            }
             vmlib_sources.append("core/shared/platform/windows/win_malloc.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/windows/win_memmap.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/windows/win_socket.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/windows/win_thread.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/windows/win_time.c") catch @panic("OOM");
+            vmlib_sources.append("core/shared/platform/windows/win_util.c") catch @panic("OOM");
         },
         .linux => {
             vmlib_flags.append("-DBH_PLATFORM_LINUX") catch @panic("OOM");
@@ -312,11 +309,10 @@ pub fn build(b: *std.Build) !void {
             vmlib_sources.append("core/shared/platform/common/posix/posix_socket.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/common/posix/posix_thread.c") catch @panic("OOM");
             vmlib_sources.append("core/shared/platform/common/posix/posix_time.c") catch @panic("OOM");
-
-            vmlib_sources.append("core/shared/platform/common/libc-util/libc_errno.c") catch @panic("OOM");
         },
         else => @panic("unsupported os"),
     }
+    vmlib_sources.append("core/shared/platform/common/libc-util/libc_errno.c") catch @panic("OOM");
 
     vmlib_flags.append("-DBH_MALLOC=wasm_runtime_malloc") catch @panic("OOM");
     vmlib_flags.append("-DBH_FREE=wasm_runtime_free") catch @panic("OOM");
