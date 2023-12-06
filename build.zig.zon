@@ -5,6 +5,8 @@
         "core",
         "product-mini",
         "wamr-compiler",
+        "build.zig",
+        "build.zig.zon",
     },
     .dependencies = .{
         .zycore = .{
