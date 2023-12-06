@@ -75,86 +75,13 @@ pub fn build(b: *std.Build) !void {
     }
 
     if (build_aot) {
-        vmlib.addIncludePath(.{ .path = "C:/Development/zelosfarm_old/llvm-project-llvmorg-15.0.7/llvm/include" });
-        vmlib.addIncludePath(.{ .path = "C:/Development/zelosfarm_old/llvm-project-llvmorg-15.0.7/llvm/build-debug/include" });
-        vmlib.addLibraryPath(.{ .path = "C:/Development/zelosfarm_old/llvm-project-llvmorg-15.0.7/llvm/build-debug/lib" });
-        vmlib.linkSystemLibrary("LLVMWindowsManifest");
-        vmlib.linkSystemLibrary("LLVMWindowsDriver");
-        vmlib.linkSystemLibrary("LLVMXRay");
-        vmlib.linkSystemLibrary("LLVMLibDriver");
-        vmlib.linkSystemLibrary("LLVMDlltoolDriver");
-        vmlib.linkSystemLibrary("LLVMCoverage");
-        vmlib.linkSystemLibrary("LLVMLineEditor");
-        vmlib.linkSystemLibrary("LLVMX86TargetMCA");
-        vmlib.linkSystemLibrary("LLVMX86Disassembler");
-        vmlib.linkSystemLibrary("LLVMX86AsmParser");
-        vmlib.linkSystemLibrary("LLVMX86CodeGen");
-        vmlib.linkSystemLibrary("LLVMX86Desc");
-        vmlib.linkSystemLibrary("LLVMX86Info");
-        vmlib.linkSystemLibrary("LLVMOrcJIT");
-        vmlib.linkSystemLibrary("LLVMMCJIT");
-        vmlib.linkSystemLibrary("LLVMJITLink");
-        vmlib.linkSystemLibrary("LLVMInterpreter");
-        vmlib.linkSystemLibrary("LLVMExecutionEngine");
-        vmlib.linkSystemLibrary("LLVMRuntimeDyld");
-        vmlib.linkSystemLibrary("LLVMOrcTargetProcess");
-        vmlib.linkSystemLibrary("LLVMOrcShared");
-        vmlib.linkSystemLibrary("LLVMDWP");
-        vmlib.linkSystemLibrary("LLVMDebugInfoGSYM");
-        vmlib.linkSystemLibrary("LLVMOption");
-        vmlib.linkSystemLibrary("LLVMObjectYAML");
-        vmlib.linkSystemLibrary("LLVMObjCopy");
-        vmlib.linkSystemLibrary("LLVMMCA");
-        vmlib.linkSystemLibrary("LLVMMCDisassembler");
-        vmlib.linkSystemLibrary("LLVMLTO");
-        vmlib.linkSystemLibrary("LLVMPasses");
-        vmlib.linkSystemLibrary("LLVMCFGuard");
-        vmlib.linkSystemLibrary("LLVMCoroutines");
-        vmlib.linkSystemLibrary("LLVMObjCARCOpts");
-        vmlib.linkSystemLibrary("LLVMipo");
-        vmlib.linkSystemLibrary("LLVMVectorize");
-        vmlib.linkSystemLibrary("LLVMLinker");
-        vmlib.linkSystemLibrary("LLVMInstrumentation");
-        vmlib.linkSystemLibrary("LLVMFrontendOpenMP");
-        vmlib.linkSystemLibrary("LLVMFrontendOpenACC");
-        vmlib.linkSystemLibrary("LLVMExtensions");
-        vmlib.linkSystemLibrary("LLVMDWARFLinker");
-        vmlib.linkSystemLibrary("LLVMGlobalISel");
-        vmlib.linkSystemLibrary("LLVMMIRParser");
-        vmlib.linkSystemLibrary("LLVMAsmPrinter");
-        vmlib.linkSystemLibrary("LLVMSelectionDAG");
-        vmlib.linkSystemLibrary("LLVMCodeGen");
-        vmlib.linkSystemLibrary("LLVMIRReader");
-        vmlib.linkSystemLibrary("LLVMAsmParser");
-        vmlib.linkSystemLibrary("LLVMInterfaceStub");
-        vmlib.linkSystemLibrary("LLVMFileCheck");
-        vmlib.linkSystemLibrary("LLVMFuzzMutate");
-        vmlib.linkSystemLibrary("LLVMTarget");
-        vmlib.linkSystemLibrary("LLVMScalarOpts");
-        vmlib.linkSystemLibrary("LLVMInstCombine");
-        vmlib.linkSystemLibrary("LLVMAggressiveInstCombine");
-        vmlib.linkSystemLibrary("LLVMTransformUtils");
-        vmlib.linkSystemLibrary("LLVMBitWriter");
-        vmlib.linkSystemLibrary("LLVMAnalysis");
-        vmlib.linkSystemLibrary("LLVMProfileData");
-        vmlib.linkSystemLibrary("LLVMSymbolize");
-        vmlib.linkSystemLibrary("LLVMDebugInfoPDB");
-        vmlib.linkSystemLibrary("LLVMDebugInfoMSF");
-        vmlib.linkSystemLibrary("LLVMDebugInfoDWARF");
-        vmlib.linkSystemLibrary("LLVMObject");
-        vmlib.linkSystemLibrary("LLVMTextAPI");
-        vmlib.linkSystemLibrary("LLVMMCParser");
-        vmlib.linkSystemLibrary("LLVMMC");
-        vmlib.linkSystemLibrary("LLVMDebugInfoCodeView");
-        vmlib.linkSystemLibrary("LLVMBitReader");
-        vmlib.linkSystemLibrary("LLVMFuzzerCLI");
-        vmlib.linkSystemLibrary("LLVMCore");
-        vmlib.linkSystemLibrary("LLVMRemarks");
-        vmlib.linkSystemLibrary("LLVMBitstreamReader");
-        vmlib.linkSystemLibrary("LLVMBinaryFormat");
-        vmlib.linkSystemLibrary("LLVMTableGen");
-        vmlib.linkSystemLibrary("LLVMSupport");
-        vmlib.linkSystemLibrary("LLVMDemangle");
+        vmlib.addIncludePath(.{ .path = "C:/Development/zelosfarm/zig+llvm+lld+clang-x86_64-windows-gnu-0.11.0-dev.1869+df4cfc2ec/include" });
+        vmlib.addLibraryPath(.{ .path = "C:/Development/zelosfarm/zig+llvm+lld+clang-x86_64-windows-gnu-0.11.0-dev.1869+df4cfc2ec/lib" });
+        for (llvm_libs) |lib_name| {
+            vmlib.linkSystemLibrary(lib_name);
+        }
+        vmlib.linkSystemLibrary("z");
+        vmlib.linkSystemLibrary("zstd");
     }
 
     vmlib.addIncludePath(.{ .path = "core/iwasm/include" });
@@ -403,27 +330,21 @@ pub fn build(b: *std.Build) !void {
     vmlib_sources.append("core/iwasm/common/wasm_native.c") catch @panic("OOM");
     vmlib_sources.append("core/iwasm/common/wasm_runtime_common.c") catch @panic("OOM");
     vmlib_sources.append("core/iwasm/common/wasm_shared_memory.c") catch @panic("OOM");
-    // switch (os_tag) {
-    //     .windows => {
-    //         if (build_simd) {
-    //             vmlib_sources.append("core/iwasm/common/arch/invokeNative_mingw_x64_simd.s") catch @panic("OOM");
-    //         } else {
-    //             vmlib_sources.append("core/iwasm/common/arch/invokeNative_mingw_x64.s") catch @panic("OOM");
-    //         }
-    //     },
-    //     else => {
-    //         if (build_simd) {
-    //             vmlib_sources.append("core/iwasm/common/arch/invokeNative_em64_simd.s") catch @panic("OOM");
-    //         } else {
-    //             vmlib_sources.append("core/iwasm/common/arch/invokeNative_em64.s") catch @panic("OOM");
-    //         }
-    //     },
-    // }
-    // vmlib_sources.append("core/iwasm/common/arch/invokeNative_general.c") catch @panic("OOM");
-    if (build_simd) {
-        vmlib_sources.append("core/iwasm/common/arch/invokeNative_mingw_x64_simd.s") catch @panic("OOM");
-    } else {
-        vmlib_sources.append("core/iwasm/common/arch/invokeNative_mingw_x64.s") catch @panic("OOM");
+    switch (os_tag) {
+        .windows => {
+            if (build_simd) {
+                vmlib_sources.append("core/iwasm/common/arch/invokeNative_mingw_x64_simd.s") catch @panic("OOM");
+            } else {
+                vmlib_sources.append("core/iwasm/common/arch/invokeNative_mingw_x64.s") catch @panic("OOM");
+            }
+        },
+        else => {
+            if (build_simd) {
+                vmlib_sources.append("core/iwasm/common/arch/invokeNative_em64_simd.s") catch @panic("OOM");
+            } else {
+                vmlib_sources.append("core/iwasm/common/arch/invokeNative_em64.s") catch @panic("OOM");
+            }
+        },
     }
 
     vmlib.addIncludePath(.{ .path = "core/shared/utils" });
@@ -487,36 +408,10 @@ pub fn build(b: *std.Build) !void {
         vmlib.strip = true;
     iwasm.step.dependOn(&vmlib.step);
     iwasm.linkLibC();
-    iwasm.addLibraryPath(.{ .path = "C:/Development/zelosfarm_old/llvm-project-llvmorg-15.0.7/llvm/build-debug/lib" });
+    for (vmlib.lib_paths.items) |lib_path| {
+        iwasm.addLibraryPath(lib_path);
+    }
     iwasm.linkLibrary(vmlib);
-    // if (!disable_hw_bound_check) {
-    //     iwasm.linkLibrary(b.dependency("zycore", .{
-    //         .target = target,
-    //         .optimize = optimize,
-    //     }).artifact("zycore"));
-    //     iwasm.linkLibrary(b.dependency("zydis", .{
-    //         .target = target,
-    //         .optimize = optimize,
-    //     }).artifact("zydis"));
-    // }
-
-    // if (target.isWindows()) {
-    //     iwasm.linkLibrary(b.dependency("winpthreads", .{
-    //         .target = target,
-    //         .optimize = optimize,
-    //     }).artifact("winpthreads"));
-    // }
-
-    // if (build_libc_uvwasi) {
-    //     iwasm.linkLibrary(b.dependency("uv", .{
-    //         .target = target,
-    //         .optimize = optimize,
-    //     }).artifact("uv"));
-    //     iwasm.linkLibrary(b.dependency("uvwasi", .{
-    //         .target = target,
-    //         .optimize = optimize,
-    //     }).artifact("uvwasi"));
-    // }
     iwasm.addIncludePath(.{ .path = "core/shared/platform/include" });
 
     var iwasm_flags = ArrayList([]const u8).init(b.allocator);
@@ -569,7 +464,9 @@ pub fn build(b: *std.Build) !void {
         wamrc.step.dependOn(&vmlib.step);
         wamrc.linkLibC();
         wamrc.linkLibCpp();
-        wamrc.addLibraryPath(.{ .path = "C:/Development/zelosfarm_old/llvm-project-llvmorg-15.0.7/llvm/build-debug/lib" });
+        for (vmlib.lib_paths.items) |lib_path| {
+            wamrc.addLibraryPath(lib_path);
+        }
         wamrc.linkLibrary(vmlib);
 
         wamrc.addCSourceFiles(.{ .files = &.{"wamr-compiler/main.c"}, .flags = &.{"-DCOMPILING_WASM_RUNTIME_API=1"} });
@@ -603,3 +500,180 @@ pub fn build(b: *std.Build) !void {
         b.installArtifact(wamrc);
     }
 }
+
+const llvm_libs = [_][]const u8{
+    "LLVMWindowsManifest",
+    "LLVMXRay",
+    "LLVMLibDriver",
+    "LLVMDlltoolDriver",
+    "LLVMCoverage",
+    "LLVMLineEditor",
+    "LLVMXCoreDisassembler",
+    "LLVMXCoreCodeGen",
+    "LLVMXCoreDesc",
+    "LLVMXCoreInfo",
+    "LLVMX86TargetMCA",
+    "LLVMX86Disassembler",
+    "LLVMX86AsmParser",
+    "LLVMX86CodeGen",
+    "LLVMX86Desc",
+    "LLVMX86Info",
+    "LLVMWebAssemblyDisassembler",
+    "LLVMWebAssemblyAsmParser",
+    "LLVMWebAssemblyCodeGen",
+    "LLVMWebAssemblyDesc",
+    "LLVMWebAssemblyUtils",
+    "LLVMWebAssemblyInfo",
+    "LLVMVEDisassembler",
+    "LLVMVEAsmParser",
+    "LLVMVECodeGen",
+    "LLVMVEDesc",
+    "LLVMVEInfo",
+    "LLVMSystemZDisassembler",
+    "LLVMSystemZAsmParser",
+    "LLVMSystemZCodeGen",
+    "LLVMSystemZDesc",
+    "LLVMSystemZInfo",
+    "LLVMSparcDisassembler",
+    "LLVMSparcAsmParser",
+    "LLVMSparcCodeGen",
+    "LLVMSparcDesc",
+    "LLVMSparcInfo",
+    "LLVMRISCVTargetMCA",
+    "LLVMRISCVDisassembler",
+    "LLVMRISCVAsmParser",
+    "LLVMRISCVCodeGen",
+    "LLVMRISCVDesc",
+    "LLVMRISCVInfo",
+    "LLVMPowerPCDisassembler",
+    "LLVMPowerPCAsmParser",
+    "LLVMPowerPCCodeGen",
+    "LLVMPowerPCDesc",
+    "LLVMPowerPCInfo",
+    "LLVMNVPTXCodeGen",
+    "LLVMNVPTXDesc",
+    "LLVMNVPTXInfo",
+    "LLVMMSP430Disassembler",
+    "LLVMMSP430AsmParser",
+    "LLVMMSP430CodeGen",
+    "LLVMMSP430Desc",
+    "LLVMMSP430Info",
+    "LLVMMipsDisassembler",
+    "LLVMMipsAsmParser",
+    "LLVMMipsCodeGen",
+    "LLVMMipsDesc",
+    "LLVMMipsInfo",
+    "LLVMLoongArchDisassembler",
+    "LLVMLoongArchAsmParser",
+    "LLVMLoongArchCodeGen",
+    "LLVMLoongArchDesc",
+    "LLVMLoongArchInfo",
+    "LLVMLanaiDisassembler",
+    "LLVMLanaiCodeGen",
+    "LLVMLanaiAsmParser",
+    "LLVMLanaiDesc",
+    "LLVMLanaiInfo",
+    "LLVMHexagonDisassembler",
+    "LLVMHexagonCodeGen",
+    "LLVMHexagonAsmParser",
+    "LLVMHexagonDesc",
+    "LLVMHexagonInfo",
+    "LLVMBPFDisassembler",
+    "LLVMBPFAsmParser",
+    "LLVMBPFCodeGen",
+    "LLVMBPFDesc",
+    "LLVMBPFInfo",
+    "LLVMAVRDisassembler",
+    "LLVMAVRAsmParser",
+    "LLVMAVRCodeGen",
+    "LLVMAVRDesc",
+    "LLVMAVRInfo",
+    "LLVMARMDisassembler",
+    "LLVMARMAsmParser",
+    "LLVMARMCodeGen",
+    "LLVMARMDesc",
+    "LLVMARMUtils",
+    "LLVMARMInfo",
+    "LLVMAMDGPUTargetMCA",
+    "LLVMAMDGPUDisassembler",
+    "LLVMAMDGPUAsmParser",
+    "LLVMAMDGPUCodeGen",
+    "LLVMAMDGPUDesc",
+    "LLVMAMDGPUUtils",
+    "LLVMAMDGPUInfo",
+    "LLVMAArch64Disassembler",
+    "LLVMAArch64AsmParser",
+    "LLVMAArch64CodeGen",
+    "LLVMAArch64Desc",
+    "LLVMAArch64Utils",
+    "LLVMAArch64Info",
+    "LLVMOrcJIT",
+    "LLVMWindowsDriver",
+    "LLVMMCJIT",
+    "LLVMJITLink",
+    "LLVMInterpreter",
+    "LLVMExecutionEngine",
+    "LLVMRuntimeDyld",
+    "LLVMOrcTargetProcess",
+    "LLVMOrcShared",
+    "LLVMDWP",
+    "LLVMDebugInfoLogicalView",
+    "LLVMDebugInfoGSYM",
+    "LLVMOption",
+    "LLVMObjectYAML",
+    "LLVMObjCopy",
+    "LLVMMCA",
+    "LLVMMCDisassembler",
+    "LLVMLTO",
+    "LLVMPasses",
+    "LLVMCFGuard",
+    "LLVMCoroutines",
+    "LLVMipo",
+    "LLVMVectorize",
+    "LLVMLinker",
+    "LLVMInstrumentation",
+    "LLVMFrontendOpenMP",
+    "LLVMFrontendOpenACC",
+    "LLVMFrontendHLSL",
+    "LLVMExtensions",
+    "LLVMDWARFLinkerParallel",
+    "LLVMDWARFLinker",
+    "LLVMGlobalISel",
+    "LLVMMIRParser",
+    "LLVMAsmPrinter",
+    "LLVMSelectionDAG",
+    "LLVMCodeGen",
+    "LLVMObjCARCOpts",
+    "LLVMIRPrinter",
+    "LLVMInterfaceStub",
+    "LLVMFileCheck",
+    "LLVMFuzzMutate",
+    "LLVMTarget",
+    "LLVMScalarOpts",
+    "LLVMInstCombine",
+    "LLVMAggressiveInstCombine",
+    "LLVMTransformUtils",
+    "LLVMBitWriter",
+    "LLVMAnalysis",
+    "LLVMProfileData",
+    "LLVMSymbolize",
+    "LLVMDebugInfoPDB",
+    "LLVMDebugInfoMSF",
+    "LLVMDebugInfoDWARF",
+    "LLVMObject",
+    "LLVMTextAPI",
+    "LLVMMCParser",
+    "LLVMIRReader",
+    "LLVMAsmParser",
+    "LLVMMC",
+    "LLVMDebugInfoCodeView",
+    "LLVMBitReader",
+    "LLVMFuzzerCLI",
+    "LLVMCore",
+    "LLVMRemarks",
+    "LLVMBitstreamReader",
+    "LLVMBinaryFormat",
+    "LLVMTargetParser",
+    "LLVMSupport",
+    "LLVMDemangle",
+};
