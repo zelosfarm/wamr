@@ -301,7 +301,13 @@ check_utf8_str(const uint8 *str, uint32 len)
 
     while (p < p_end) {
         chr = *p;
-        if (chr < 0x80) {
+
+        if (chr == 0) {
+            LOG_WARNING(
+                "LIMITATION: a string which contains '\\00' is unsupported");
+            return false;
+        }
+        else if (chr < 0x80) {
             p++;
         }
         else if (chr >= 0xC2 && chr <= 0xDF && p + 1 < p_end) {
@@ -2702,7 +2708,7 @@ load_user_section(const uint8 *buf, const uint8 *buf_end, WASMModule *module,
 
     read_leb_uint32(p, p_end, name_len);
 
-    if (name_len == 0 || p + name_len > p_end) {
+    if (p + name_len > p_end) {
         set_error_buf(error_buf, error_buf_size, "unexpected end");
         return false;
     }
@@ -2878,6 +2884,7 @@ init_llvm_jit_functions_stage1(WASMModule *module, char *error_buf,
     option.opt_level = llvm_jit_options.opt_level;
     option.size_level = llvm_jit_options.size_level;
     option.segue_flags = llvm_jit_options.segue_flags;
+    option.linux_perf_support = llvm_jit_options.linux_perf_support;
 
 #if WASM_ENABLE_BULK_MEMORY != 0
     option.enable_bulk_memory = true;
@@ -7192,10 +7199,7 @@ re_scan:
                 }
 
 #if WASM_ENABLE_FAST_INTERP != 0
-                if (opcode == WASM_OP_BLOCK) {
-                    skip_label();
-                }
-                else if (opcode == WASM_OP_LOOP) {
+                if (opcode == WASM_OP_BLOCK || opcode == WASM_OP_LOOP) {
                     skip_label();
                     if (BLOCK_HAS_PARAM(block_type)) {
                         /* Make sure params are in dynamic space */
@@ -7203,8 +7207,10 @@ re_scan:
                                 loader_ctx, false, error_buf, error_buf_size))
                             goto fail;
                     }
-                    (loader_ctx->frame_csp - 1)->code_compiled =
-                        loader_ctx->p_code_compiled;
+                    if (opcode == WASM_OP_LOOP) {
+                        (loader_ctx->frame_csp - 1)->code_compiled =
+                            loader_ctx->p_code_compiled;
+                    }
                 }
                 else if (opcode == WASM_OP_IF) {
                     /* If block has parameters, we should make sure they are in
@@ -7444,6 +7450,9 @@ re_scan:
                         if (frame_csp_tmp->label_type != LABEL_TYPE_LOOP)
                             ret_count = block_type_get_result_types(
                                 &frame_csp_tmp->block_type, &ret_types);
+                        else
+                            ret_count = block_type_get_param_types(
+                                &frame_csp_tmp->block_type, &ret_types);
                     }
                     else {
                         uint8 *tmp_ret_types = NULL;
@@ -7453,6 +7462,9 @@ re_scan:
                          * type */
                         if (frame_csp_tmp->label_type != LABEL_TYPE_LOOP)
                             tmp_ret_count = block_type_get_result_types(
+                                &frame_csp_tmp->block_type, &tmp_ret_types);
+                        else
+                            tmp_ret_count = block_type_get_param_types(
                                 &frame_csp_tmp->block_type, &tmp_ret_types);
 
                         if (ret_count != tmp_ret_count
@@ -7746,7 +7758,8 @@ re_scan:
                 }
 
                 if (available_stack_cell > 0) {
-                    if (is_32bit_type(*(loader_ctx->frame_ref - 1))) {
+                    if (is_32bit_type(*(loader_ctx->frame_ref - 1))
+                        || *(loader_ctx->frame_ref - 1) == VALUE_TYPE_ANY) {
                         loader_ctx->frame_ref--;
                         loader_ctx->stack_cell_num--;
 #if WASM_ENABLE_FAST_INTERP != 0
